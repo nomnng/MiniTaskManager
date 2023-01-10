@@ -1,18 +1,24 @@
 #pragma once
 #include <Windows.h>
+#include <iostream>
+#include <vector>
+#include <string>
 
-class MainWindow {
+#include "Window.h"
+#include "ListBox.h"
+
+using namespace std;
+
+class MainWindow : Window {
 public:
-	MainWindow();
-	void ProcessMessages();
+	MainWindow(LPCWSTR windowName, int width, int height);
+	void MessageLoop();
 
 private:
-	bool RegisterWndClass(HINSTANCE hInstance);
-	bool CreateWnd(HINSTANCE hInstance);
+	bool RegisterWndClass();
+	LRESULT ProcessMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) override;
+	void OnResize(WPARAM wParam, LPARAM lParam);
 
-	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-	const LPCWSTR m_WindowName = L"MiniTaskManager";
 	const LPCWSTR m_ClassName = L"MiniTaskMgrClass";
-	HWND m_WindowHandle;
+	ListBox *m_ProcessListBox;
 };

@@ -6,7 +6,7 @@
 using namespace std;
 
 int main() {
-	MainWindow wnd;
-	wnd.ProcessMessages();
+	MainWindow wnd(L"MiniTaskManager" , 600, 400);
+	wnd.MessageLoop();
 
 }
