@@ -7,7 +7,7 @@ MainWindow::MainWindow(LPCWSTR windowName, int width, int height)
 	CreateWnd(m_ClassName, WS_OVERLAPPEDWINDOW | WS_VISIBLE, NULL);
 	SetWindowProc(false);
 
-	m_ProcessListBox = new ListBox(m_WindowHandle, 0 , 0 , m_Width , m_Height);
+	m_ProcessListBox = new ListBox(m_WindowHandle, 0 , 50 , m_Width , m_Height - 100);
 
 	for (int i = 0; i < 125; i++) {
 		wstring str = wstring(L"Test") + to_wstring(i);
@@ -45,6 +45,9 @@ LRESULT MainWindow::ProcessMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 	switch(msg) {
 		case WM_SIZE:
 			OnResize(wParam , lParam);
+			SCROLLBARINFO sbi;
+			sbi.cbSize = sizeof(SCROLLBARINFO);
+			GetScrollBarInfo(m_ProcessListBox->GetHWND(), OBJID_VSCROLL, &sbi);
 			break;
 		case WM_COMMAND:
 			if (HIWORD(wParam) == LBN_SELCHANGE)
@@ -57,8 +60,12 @@ LRESULT MainWindow::ProcessMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 
 void MainWindow::OnResize(WPARAM wParam, LPARAM lParam) {
 	DWORD resizeType = wParam;
-	WORD width = HIWORD(lParam);
-	WORD height = LOWORD(lParam);
+	m_Width = LOWORD(lParam);
+	m_Height = HIWORD(lParam);
+	cout << "RESIZE" << resizeType << endl;
+
+	HWND listBox = m_ProcessListBox->GetHWND();
+	m_ProcessListBox->SetRect(0, 50, m_Width, m_Height - 100);
 }
 
 void MainWindow::MessageLoop() {

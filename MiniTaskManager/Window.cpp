@@ -1,5 +1,9 @@
 #include "Window.h"
 
+HWND Window::GetHWND() {
+	return m_WindowHandle;
+}
+
 Window::Window(HWND parent, int x, int y, int width, int height, LPCWSTR windowName)
 	: m_Parent(parent), m_Position{x, y}, m_Width(width), m_Height(height), m_WindowName(windowName), m_OriginalWindowProc(0), m_WindowHandle(0) {}
 
@@ -28,6 +32,26 @@ void Window::SetWindowProc(bool subclassed) {
 	} else {
 		SetWindowLongPtr(m_WindowHandle, GWLP_WNDPROC, (LONG)WindowProc);
 	}
+}
+
+void Window::SetRect(int x, int y, int width, int height) {
+	m_Width = width;
+	m_Height = height;
+	m_Position.x = x;
+	m_Position.y = y;
+	SetWindowPos(m_WindowHandle, 0, x, y, width, height, SWP_SHOWWINDOW | SWP_NOZORDER);
+}
+
+void Window::SetPosition(int x, int y) {
+	m_Position.x = x;
+	m_Position.y = y;
+	SetWindowPos(m_WindowHandle, 0, x, y, 0, 0, SWP_SHOWWINDOW | SWP_NOZORDER | SWP_NOSIZE);
+}
+
+void Window::SetSize(int width, int height) {
+	m_Width = width;
+	m_Height = height;
+	SetWindowPos(m_WindowHandle, 0, 0, 0, width, height, SWP_SHOWWINDOW | SWP_NOZORDER | SWP_NOMOVE);
 }
 
 LRESULT Window::WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {

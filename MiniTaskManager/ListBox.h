@@ -7,7 +7,7 @@
 
 using namespace std;
 
-class ListBox : private Window {
+class ListBox : public Window {
 public:
 	ListBox(HWND parent, int x, int y, int width, int height);
 	void AddItem(LPWSTR str);

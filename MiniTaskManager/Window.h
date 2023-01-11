@@ -5,6 +5,11 @@
 using namespace std;
 
 class Window {
+	public:
+		HWND GetHWND();
+		void SetRect(int x, int y, int width, int height);
+		void SetPosition(int x, int y);
+		void SetSize(int width, int height);
 	protected:
 		Window(HWND parent, int x, int y, int width, int height, LPCWSTR windowName);
 
