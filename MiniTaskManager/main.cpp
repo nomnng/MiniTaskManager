@@ -9,7 +9,7 @@ using namespace std;
 int main() {
 	ProcessEnumerator::GetProcessList();
 
-	MainWindow wnd(L"MiniTaskManager" , 600, 400);
+	MainWindow wnd(TEXT("MiniTaskManager") , 800, 600);
 	wnd.MessageLoop();
 
 }

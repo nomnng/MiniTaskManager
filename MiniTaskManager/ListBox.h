@@ -8,8 +8,10 @@
 using namespace std;
 
 class ListBox : public Window {
-public:
-	ListBox(HWND parent, int x, int y, int width, int height);
-	void AddItem(LPWSTR str);
-	void AddItems(vector<LPWSTR> items);
+	public:
+		ListBox(HWND parent, int x, int y, int width, int height);
+		void AddItem(LPWSTR str);
+		void AddItems(vector<LPWSTR> items);
+	private:
+		LRESULT ProcessMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 };

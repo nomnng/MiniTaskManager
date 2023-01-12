@@ -5,9 +5,10 @@ HWND Window::GetHWND() {
 }
 
 Window::Window(HWND parent, int x, int y, int width, int height, LPCWSTR windowName)
-	: m_Parent(parent), m_Position{x, y}, m_Width(width), m_Height(height), m_WindowName(windowName), m_OriginalWindowProc(0), m_WindowHandle(0) {}
+	: m_Parent(parent), m_Position{x, y}, m_Width(width), m_Height(height), m_WindowName(windowName),
+	m_OriginalWindowProc(0), m_WindowHandle(0), m_ClassName(0) {}
 
-bool Window::CreateWnd(LPCWSTR className, DWORD style, HWND parent) {
+bool Window::CreateWnd(LPCWSTR className, DWORD style, HWND parent, bool subclassed) {
 	m_WindowHandle = CreateWindow(
 		className,
 		m_WindowName,
@@ -19,19 +20,15 @@ bool Window::CreateWnd(LPCWSTR className, DWORD style, HWND parent) {
 		(HWND)parent,
 		(HMENU)NULL,
 		NULL,
-		(LPVOID)NULL
+		(LPVOID)this
 	);
 
-	return m_WindowHandle != NULL;
-}
-
-void Window::SetWindowProc(bool subclassed) {
-	SetWindowLongPtr(m_WindowHandle, GWLP_USERDATA, (LONG)this);
-	if (subclassed) {
+	if (m_WindowHandle) {
+		SetWindowLongPtr(m_WindowHandle, GWLP_USERDATA, (LONG)this);
 		m_OriginalWindowProc = (WNDPROC)SetWindowLongPtr(m_WindowHandle, GWLP_WNDPROC, (LONG)SubclassedWindowProc);
-	} else {
-		SetWindowLongPtr(m_WindowHandle, GWLP_WNDPROC, (LONG)WindowProc);
 	}
+
+	return m_WindowHandle != NULL;
 }
 
 void Window::SetRect(int x, int y, int width, int height) {
@@ -54,20 +51,40 @@ void Window::SetSize(int width, int height) {
 	SetWindowPos(m_WindowHandle, 0, 0, 0, width, height, SWP_SHOWWINDOW | SWP_NOZORDER | SWP_NOMOVE);
 }
 
-LRESULT Window::WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-	Window* ptr = (Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-	if (ptr != NULL)
-		return ptr->ProcessMessage(hwnd, msg, wParam, lParam);
-
-	return DefWindowProc(hwnd, msg, wParam, lParam);
+LRESULT Window::RegisteredWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+	if (msg == WM_CREATE) {
+		CREATESTRUCT* createInfo = (CREATESTRUCT*)lParam;
+		SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG)createInfo->lpCreateParams);
+	} else {
+		Window* ptr = (Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+		if (ptr)
+			return ptr->ProcessMessage(hwnd, msg, wParam, lParam);
+		else 
+			return DefWindowProc(hwnd, msg, wParam, lParam); // for messages before WM_CREATE
+	}
 }
 
 LRESULT Window::SubclassedWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	Window* ptr = (Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-	return CallWindowProc(ptr->m_OriginalWindowProc, hwnd, msg, wParam, lParam);
+	return ptr->ProcessMessage(hwnd, msg, wParam, lParam);
 }
 
-LRESULT Window::ProcessMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-	return DefWindowProc(hwnd, msg, wParam, lParam);
-}
+bool Window::RegisterWndClass(UINT style, HICON icon, HCURSOR cursor, HBRUSH backgroundBrush, LPCWSTR className) {
+	m_ClassName = className;
+	
+	WNDCLASSEX wcx;
+	wcx.cbSize = sizeof(wcx);
+	wcx.style = CS_HREDRAW | CS_VREDRAW;
+	wcx.lpfnWndProc = RegisteredWindowProc;
+	wcx.cbClsExtra = 0;
+	wcx.cbWndExtra = 0;
+	wcx.hInstance = NULL;
+	wcx.hIcon = icon;
+	wcx.hCursor = cursor;
+	wcx.hbrBackground = (HBRUSH)backgroundBrush;
+	wcx.lpszMenuName = NULL;
+	wcx.lpszClassName = m_ClassName;
+	wcx.hIconSm = (HICON)NULL;
 
+	return RegisterClassEx(&wcx);
+}
