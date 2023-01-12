@@ -9,10 +9,16 @@ MainWindow::MainWindow(LPCWSTR windowName, int width, int height)
 
 	m_ProcessListBox = new ListBox(m_WindowHandle, 0 , 50 , m_Width , m_Height - 100);
 
-	for (int i = 0; i < 125; i++) {
-		wstring str = wstring(L"Test") + to_wstring(i);
-		m_ProcessListBox->AddItem((LPWSTR) str.c_str());	
+	vector<wstring> processNames = ProcessEnumerator::GetProcessList();
+
+	for (int i = 0; i < processNames.size(); i++) {
+		m_ProcessListBox->AddItem((LPWSTR) processNames[i].c_str());	
 	}
+
+	//for (int i = 0; i < 125; i++) {
+	//	wstring str = wstring(L"Test") + to_wstring(i);
+	//	m_ProcessListBox->AddItem((LPWSTR)str.c_str());
+	//}
 
 
 }
@@ -45,9 +51,6 @@ LRESULT MainWindow::ProcessMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 	switch(msg) {
 		case WM_SIZE:
 			OnResize(wParam , lParam);
-			SCROLLBARINFO sbi;
-			sbi.cbSize = sizeof(SCROLLBARINFO);
-			GetScrollBarInfo(m_ProcessListBox->GetHWND(), OBJID_VSCROLL, &sbi);
 			break;
 		case WM_COMMAND:
 			if (HIWORD(wParam) == LBN_SELCHANGE)

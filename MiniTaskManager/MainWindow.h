@@ -6,6 +6,7 @@
 
 #include "Window.h"
 #include "ListBox.h"
+#include "ProcessEnumerator.h"
 
 using namespace std;
 
