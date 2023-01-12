@@ -55,6 +55,7 @@ LRESULT Window::RegisteredWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 	if (msg == WM_CREATE) {
 		CREATESTRUCT* createInfo = (CREATESTRUCT*)lParam;
 		SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG)createInfo->lpCreateParams);
+		return 0;
 	} else {
 		Window* ptr = (Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 		if (ptr)

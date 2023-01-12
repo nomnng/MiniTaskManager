@@ -10,7 +10,7 @@ vector<wstring> ProcessEnumerator::GetProcessList() {
 			int nameLen = GetProcessImageFileName(pHandle, processName, MAX_PATH);
 			if (nameLen > 0) {
 				wstring nameStr = wstring(processName, nameLen);
-				int slashPos = nameStr.find_last_of(L"\\");
+				int slashPos = nameStr.find_last_of(TEXT("\\"));
 				processNameList.push_back(nameStr.substr(slashPos + 1));
 			}
 		}
