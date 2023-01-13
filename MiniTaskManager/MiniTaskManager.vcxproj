@@ -141,14 +141,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ListBox.cpp" />
+    <ClCompile Include="ListView.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="ProcessEnumerator.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ListBox.h" />
+    <ClInclude Include="ListView.h" />
     <ClInclude Include="MainWindow.h" />
     <ClInclude Include="ProcessEnumerator.h" />
     <ClInclude Include="Window.h" />

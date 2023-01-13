@@ -5,7 +5,7 @@
 #include <string>
 
 #include "Window.h"
-#include "ListBox.h"
+#include "ListView.h"
 #include "ProcessEnumerator.h"
 
 using namespace std;
@@ -24,5 +24,5 @@ private:
 	void OnTimer(WPARAM wParam);
 	void UpdateProcessList();
 
-	ListBox *m_ProcessListBox;
+	ListView *m_ProcessListView;
 };

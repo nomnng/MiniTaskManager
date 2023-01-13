@@ -7,11 +7,13 @@ MainWindow::MainWindow(LPCWSTR windowName, int width, int height)
 	RegisterWndClass(CS_HREDRAW | CS_VREDRAW, NULL, NULL, backgroundBrush, MAIN_WINDOW_CLASS_NAME);
 	CreateWnd(m_ClassName, WS_OVERLAPPEDWINDOW, NULL, false);
 
-	m_ProcessListBox = new ListBox(m_WindowHandle, 0 , 0 , m_Width , m_Height);
+	SetTimer(m_WindowHandle, TIMER_ID1, 2000, (TIMERPROC)NULL);
 
-	SetTimer(m_WindowHandle, TIMER_ID1, 1000, (TIMERPROC)NULL);
+	m_ProcessListView = new ListView(m_WindowHandle, 0, 0, m_Width, m_Height);
+	m_ProcessListView->AddColumn((LPTSTR)TEXT("Process name"), m_Width - 40, 200);
 
 	ShowWindow(m_WindowHandle, SW_SHOW);
+
 	UpdateProcessList();
 }
 
@@ -30,6 +32,8 @@ LRESULT MainWindow::ProcessMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 			if (HIWORD(wParam) == LBN_SELCHANGE)
 				cout << "SELCHANGE" << endl;
 			return 0;
+		case WM_NOTIFY:
+			return 0;
 		case WM_TIMER:
 			OnTimer(wParam);
 			return 0;
@@ -43,9 +47,9 @@ void MainWindow::OnResize(WPARAM wParam, LPARAM lParam) {
 	m_Width = LOWORD(lParam);
 	m_Height = HIWORD(lParam);
 
-	if (m_ProcessListBox) {
-		HWND listBox = m_ProcessListBox->GetHWND();
-		m_ProcessListBox->SetRect(0, 50, m_Width, m_Height - 100);
+	if (m_ProcessListView) {
+		HWND listView = m_ProcessListView->GetHWND();
+		m_ProcessListView->SetRect(0, 50, m_Width, m_Height - 100);
 	}
 }
 
@@ -59,17 +63,16 @@ void MainWindow::OnTimer(WPARAM wParam) {
 }
 
 void MainWindow::UpdateProcessList() {
-	if (!m_ProcessListBox)
+	if (!m_ProcessListView)
 		return;
 
-	m_ProcessListBox->ClearItems();
-
+	m_ProcessListView->DeleteAllItems();
 	vector<wstring> processNames = ProcessEnumerator::GetProcessList();
 	for (int i = 0; i < processNames.size(); i++) {
-		m_ProcessListBox->AddItem((LPWSTR)processNames[i].c_str());
+		vector<LPTSTR> item = vector<LPTSTR>();
+		item.push_back((LPTSTR)processNames[i].c_str());
+		m_ProcessListView->AddItem(item);
 	}
-
-	m_ProcessListBox->SetScrollPosition();
 }
 
 
