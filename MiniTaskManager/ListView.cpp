@@ -45,7 +45,42 @@ void ListView::AddItem(vector<LPTSTR> item) {
 	m_ItemCount++;
 }
 
+LPARAM ListView::CreateItemAtIndex(LPTSTR item, int index) {
+	LVITEM itemInfo;
+	itemInfo.mask = LVIF_TEXT;
+	itemInfo.iItem = index;
+	itemInfo.iSubItem = 0;
+	itemInfo.pszText = item;
+
+	m_ItemCount++;
+	return SendMessage(m_WindowHandle, LVM_INSERTITEM, 0, (LPARAM)&itemInfo);
+}
+
+LPARAM ListView::CreateItem(LPTSTR item) {
+	LVITEM itemInfo;
+	itemInfo.mask = LVIF_TEXT;
+	itemInfo.iItem = m_ItemCount++;
+	itemInfo.iSubItem = 0;
+	itemInfo.pszText = item;
+
+	return SendMessage(m_WindowHandle, LVM_INSERTITEM, 0, (LPARAM)&itemInfo);
+}
+
 void ListView::DeleteAllItems() {
 	SendMessage(m_WindowHandle, LVM_DELETEALLITEMS, 0, 0);
+	m_ItemCount = 0;
+}
+
+void ListView::DeleteItem(int index) {
+	SendMessage(m_WindowHandle, LVM_DELETEITEM, index, 0);
+}
+
+void ListView::ChangeItem(LPTSTR data, int itemIndex, int subItemIndex) {
+	LVITEM itemInfo;
+	itemInfo.mask = LVIF_TEXT;
+	itemInfo.iItem = itemIndex;
+	itemInfo.iSubItem = subItemIndex;
+	itemInfo.pszText = data;
+	SendMessage(m_WindowHandle, LVM_SETITEM, 0, (LPARAM)&itemInfo);
 }
 

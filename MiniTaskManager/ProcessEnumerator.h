@@ -12,4 +12,5 @@ class ProcessEnumerator {
 	public:
 		static vector<wstring> GetProcessList();
 		static vector<DWORD> GetProcessIDs();
+		static wstring GetProcessName(DWORD pid);
 };

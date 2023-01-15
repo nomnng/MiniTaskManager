@@ -151,6 +151,7 @@
     <ClInclude Include="ListView.h" />
     <ClInclude Include="MainWindow.h" />
     <ClInclude Include="ProcessEnumerator.h" />
+    <ClInclude Include="Utils.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

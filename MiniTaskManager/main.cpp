@@ -10,7 +10,5 @@ int main() {
 	ProcessEnumerator::GetProcessList();
 
 	MainWindow wnd(TEXT("MiniTaskManager") , 800, 600);
-
 	wnd.MessageLoop();
-
 }

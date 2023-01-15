@@ -5,8 +5,7 @@ HWND Window::GetHWND() {
 }
 
 Window::Window(HWND parent, int x, int y, int width, int height, LPCWSTR windowName)
-	: m_Parent(parent), m_Position{x, y}, m_Width(width), m_Height(height), m_WindowName(windowName),
-	m_OriginalWindowProc(0), m_WindowHandle(0), m_ClassName(0) {}
+	: m_Parent(parent), m_Position{x, y}, m_Width(width), m_Height(height), m_WindowName(windowName) {}
 
 bool Window::CreateWnd(LPCWSTR className, DWORD style, HWND parent, bool subclassed) {
 	m_WindowHandle = CreateWindow(

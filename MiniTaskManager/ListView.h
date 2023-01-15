@@ -13,6 +13,10 @@ class ListView : public Window {
 		void AddColumn(LPTSTR name, int width, int minWidth);	
 		void AddItem(vector<LPTSTR> item);
 		void DeleteAllItems();
+		void DeleteItem(int index);
+		void ChangeItem(LPTSTR data, int itemIndex, int subItemIndex);
+		LPARAM CreateItem(LPTSTR item);
+		LPARAM CreateItemAtIndex(LPTSTR item, int index);
 	private:
 		LRESULT ProcessMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 

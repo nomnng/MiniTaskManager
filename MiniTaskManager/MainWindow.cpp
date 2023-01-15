@@ -7,14 +7,15 @@ MainWindow::MainWindow(LPCWSTR windowName, int width, int height)
 	RegisterWndClass(CS_HREDRAW | CS_VREDRAW, NULL, NULL, backgroundBrush, MAIN_WINDOW_CLASS_NAME);
 	CreateWnd(m_ClassName, WS_OVERLAPPEDWINDOW, NULL, false);
 
-	SetTimer(m_WindowHandle, TIMER_ID1, 2000, (TIMERPROC)NULL);
+	SetTimer(m_WindowHandle, TIMER_ID1, 1000, (TIMERPROC)NULL);
 
-	m_ProcessListView = new ListView(m_WindowHandle, 0, 0, m_Width, m_Height);
-	m_ProcessListView->AddColumn((LPTSTR)TEXT("Process name"), m_Width - 40, 200);
+	m_ProcessListView = new ListView(m_WindowHandle, 0, 0, m_Width, m_Height - 200);
+	m_ProcessListView->AddColumn((LPTSTR)TEXT("PID"), 50, 50);
+	m_ProcessListView->AddColumn((LPTSTR)TEXT("Process name"), m_Width / 2, 200);
+	
+	InitProcessList();
 
 	ShowWindow(m_WindowHandle, SW_SHOW);
-
-	UpdateProcessList();
 }
 
 LRESULT MainWindow::ProcessMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -33,7 +34,7 @@ LRESULT MainWindow::ProcessMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 				cout << "SELCHANGE" << endl;
 			return 0;
 		case WM_NOTIFY:
-			return 0;
+			return ProcessNotification(wParam, lParam);
 		case WM_TIMER:
 			OnTimer(wParam);
 			return 0;
@@ -48,8 +49,8 @@ void MainWindow::OnResize(WPARAM wParam, LPARAM lParam) {
 	m_Height = HIWORD(lParam);
 
 	if (m_ProcessListView) {
-		HWND listView = m_ProcessListView->GetHWND();
 		m_ProcessListView->SetRect(0, 50, m_Width, m_Height - 100);
+		ListView_SetColumnWidth(m_ProcessListView->GetHWND(), 1, LVSCW_AUTOSIZE_USEHEADER);
 	}
 }
 
@@ -62,16 +63,75 @@ void MainWindow::OnTimer(WPARAM wParam) {
 	}
 }
 
+
 void MainWindow::UpdateProcessList() {
 	if (!m_ProcessListView)
 		return;
 
-	m_ProcessListView->DeleteAllItems();
-	vector<wstring> processNames = ProcessEnumerator::GetProcessList();
-	for (int i = 0; i < processNames.size(); i++) {
-		vector<LPTSTR> item = vector<LPTSTR>();
-		item.push_back((LPTSTR)processNames[i].c_str());
-		m_ProcessListView->AddItem(item);
+	vector<DWORD> newProcessIDs = ProcessEnumerator::GetProcessIDs();
+
+	vector<DWORD> createdProcesses = Utils::vectorDifference(newProcessIDs, m_ProcessIDs);
+	vector<DWORD> endedProcesses = Utils::vectorDifference(m_ProcessIDs, newProcessIDs);
+
+	for (int i = 0; i < endedProcesses.size(); i++) {
+		for (int j = 0; j < m_ProcessIDs.size(); j++) {
+			if (m_ProcessIDs[j] == endedProcesses[i]) {
+				m_ProcessListView->DeleteItem(j); // removing ended processes from listview
+			}
+		}
+	}
+
+	for (int i = 0; i < createdProcesses.size(); i++) {
+		for (int j = 0; j < newProcessIDs.size(); j++) {
+			if (newProcessIDs[j] == createdProcesses[i]) {
+				wstring pidStr = to_wstring(createdProcesses[i]);
+				m_ProcessListView->CreateItemAtIndex((LPTSTR)pidStr.c_str(), j); // adding created processes to listview
+
+				wstring pName = ProcessEnumerator::GetProcessName(createdProcesses[i]);
+				m_ProcessListView->ChangeItem((LPTSTR)pName.c_str(), j, COLUMN_NAME_INDEX);
+			}
+		}
+
+	}
+
+	m_ProcessIDs = newProcessIDs;
+}
+
+void MainWindow::InitProcessList() {
+	if (!m_ProcessListView)
+		return;
+
+	m_ProcessIDs = ProcessEnumerator::GetProcessIDs();
+
+	for (int i = 0; i < m_ProcessIDs.size(); i++) {
+		wstring pidStr = to_wstring(m_ProcessIDs[i]);
+		m_ProcessListView->CreateItem((LPTSTR)pidStr.c_str());
+
+		wstring pName = ProcessEnumerator::GetProcessName(m_ProcessIDs[i]);
+
+		m_ProcessListView->ChangeItem((LPTSTR)pName.c_str(), i, COLUMN_NAME_INDEX);
+	}
+}
+
+LRESULT MainWindow::ProcessNotification(WPARAM wParam, LPARAM lParam) {
+	LPNMLVCUSTOMDRAW  customDrawInfo = (LPNMLVCUSTOMDRAW)lParam;
+	int colorFlag = 0;
+	
+	switch (customDrawInfo->nmcd.hdr.code) {
+		case NM_CUSTOMDRAW:
+			switch (customDrawInfo->nmcd.dwDrawStage) {
+				case CDDS_PREPAINT:
+					return CDRF_NOTIFYITEMDRAW;
+
+				case CDDS_ITEMPREPAINT:
+					colorFlag = customDrawInfo->nmcd.dwItemSpec % 2;
+					customDrawInfo->clrText = RGB(0, 0, 0);
+					customDrawInfo->clrTextBk = RGB(130 - (colorFlag * 50), 180 - (colorFlag * 50), 250);
+
+					return CDRF_NEWFONT;
+			}
+		default:
+			return 0;
 	}
 }
 
