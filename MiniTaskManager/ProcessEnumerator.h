@@ -13,4 +13,5 @@ class ProcessEnumerator {
 		static vector<wstring> GetProcessList();
 		static vector<DWORD> GetProcessIDs();
 		static wstring GetProcessName(DWORD pid);
+		static ULONG64 GetUsedCPUTime(DWORD pid);
 };

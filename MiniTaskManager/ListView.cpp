@@ -5,6 +5,7 @@ ListView::ListView(HWND parent, int x, int y, int width, int height)
 
 	CreateWnd(WC_LISTVIEW, WS_CHILD | WS_VISIBLE | LVS_REPORT, parent, true);
 
+	ListView_SetExtendedListViewStyle(m_WindowHandle, LVS_EX_FULLROWSELECT);
 }
 
 LRESULT ListView::ProcessMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -14,16 +15,16 @@ LRESULT ListView::ProcessMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 	}
 }
 
-void ListView::AddColumn(LPTSTR name, int width, int minWidth) {
+void ListView::AddColumn(LPTSTR name, int width, int minWidth, int columnIndex) {
 	LVCOLUMN columnInfo;
 	columnInfo.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM | LVCF_MINWIDTH;
 	columnInfo.fmt = LVCFMT_LEFT;
 	columnInfo.cx = width;
 	columnInfo.pszText = name;
-	columnInfo.iSubItem = m_ColumnCount;
+	columnInfo.iSubItem = columnIndex;
 	columnInfo.cxMin = minWidth;
 
-	SendMessage(m_WindowHandle, LVM_INSERTCOLUMN, m_ColumnCount, (LPARAM)&columnInfo);
+	SendMessage(m_WindowHandle, LVM_INSERTCOLUMN, columnIndex, (LPARAM)&columnInfo);
 	m_ColumnCount++;
 }
 
@@ -82,5 +83,9 @@ void ListView::ChangeItem(LPTSTR data, int itemIndex, int subItemIndex) {
 	itemInfo.iSubItem = subItemIndex;
 	itemInfo.pszText = data;
 	SendMessage(m_WindowHandle, LVM_SETITEM, 0, (LPARAM)&itemInfo);
+}
+
+void ListView::UpdateColumnWidth() {
+	ListView_SetColumnWidth(m_WindowHandle, m_ColumnCount - 1, LVSCW_AUTOSIZE_USEHEADER);
 }
 

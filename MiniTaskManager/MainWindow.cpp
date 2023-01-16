@@ -7,12 +7,13 @@ MainWindow::MainWindow(LPCWSTR windowName, int width, int height)
 	RegisterWndClass(CS_HREDRAW | CS_VREDRAW, NULL, NULL, backgroundBrush, MAIN_WINDOW_CLASS_NAME);
 	CreateWnd(m_ClassName, WS_OVERLAPPEDWINDOW, NULL, false);
 
-	SetTimer(m_WindowHandle, TIMER_ID1, 1000, (TIMERPROC)NULL);
+	SetTimer(m_WindowHandle, TIMER_ID1, TIMER_INTERVAL_MS, (TIMERPROC)NULL);
 
-	m_ProcessListView = new ListView(m_WindowHandle, 0, 0, m_Width, m_Height - 200);
-	m_ProcessListView->AddColumn((LPTSTR)TEXT("PID"), 50, 50);
-	m_ProcessListView->AddColumn((LPTSTR)TEXT("Process name"), m_Width / 2, 200);
-	
+	m_ProcessListView = new ListView(m_WindowHandle, 0, 0, m_Width, m_Height);
+	m_ProcessListView->AddColumn((LPTSTR)TEXT("PID"), 50, 50, COLUMN_PID_INDEX);
+	m_ProcessListView->AddColumn((LPTSTR)TEXT("Process name"), m_Width / 2, 200, COLUMN_NAME_INDEX);
+	m_ProcessListView->AddColumn((LPTSTR)TEXT("CPU"), m_Width / 2, 100, COLUMN_CPU_INDEX);
+
 	InitProcessList();
 
 	ShowWindow(m_WindowHandle, SW_SHOW);
@@ -49,8 +50,8 @@ void MainWindow::OnResize(WPARAM wParam, LPARAM lParam) {
 	m_Height = HIWORD(lParam);
 
 	if (m_ProcessListView) {
-		m_ProcessListView->SetRect(0, 50, m_Width, m_Height - 100);
-		ListView_SetColumnWidth(m_ProcessListView->GetHWND(), 1, LVSCW_AUTOSIZE_USEHEADER);
+		m_ProcessListView->SetRect(0, 0, m_Width, m_Height);
+		m_ProcessListView->UpdateColumnWidth();
 	}
 }
 
@@ -62,7 +63,6 @@ void MainWindow::OnTimer(WPARAM wParam) {
 			break;
 	}
 }
-
 
 void MainWindow::UpdateProcessList() {
 	if (!m_ProcessListView)
@@ -77,6 +77,8 @@ void MainWindow::UpdateProcessList() {
 		for (int j = 0; j < m_ProcessIDs.size(); j++) {
 			if (m_ProcessIDs[j] == endedProcesses[i]) {
 				m_ProcessListView->DeleteItem(j); // removing ended processes from listview
+				m_ProcessUsedCPU.erase(m_ProcessUsedCPU.begin() + j);
+				m_ProcessIDs.erase(m_ProcessIDs.begin() + j);
 			}
 		}
 	}
@@ -84,17 +86,34 @@ void MainWindow::UpdateProcessList() {
 	for (int i = 0; i < createdProcesses.size(); i++) {
 		for (int j = 0; j < newProcessIDs.size(); j++) {
 			if (newProcessIDs[j] == createdProcesses[i]) {
-				wstring pidStr = to_wstring(createdProcesses[i]);
+				DWORD pid = createdProcesses[i];
+				wstring pidStr = to_wstring(pid);
 				m_ProcessListView->CreateItemAtIndex((LPTSTR)pidStr.c_str(), j); // adding created processes to listview
 
-				wstring pName = ProcessEnumerator::GetProcessName(createdProcesses[i]);
+				wstring pName = ProcessEnumerator::GetProcessName(pid);
 				m_ProcessListView->ChangeItem((LPTSTR)pName.c_str(), j, COLUMN_NAME_INDEX);
+
+				m_ProcessListView->ChangeItem((LPTSTR)TEXT("0"), j, COLUMN_CPU_INDEX);
+
+				m_ProcessUsedCPU.insert(m_ProcessUsedCPU.begin() + j, ProcessEnumerator::GetUsedCPUTime(pid));
+				m_ProcessIDs.insert(m_ProcessIDs.begin() + j, pid);
 			}
 		}
-
 	}
 
-	m_ProcessIDs = newProcessIDs;
+	for (int i = 0; i < newProcessIDs.size(); i++) {
+		ULONG64 newTime = ProcessEnumerator::GetUsedCPUTime(newProcessIDs[i]);
+		if (m_ProcessUsedCPU[i] != newTime) {
+			ULONG64 usage = (newTime - m_ProcessUsedCPU[i]) / (TIMER_INTERVAL_MS * 1000);
+			
+			wstring usageStr = to_wstring(usage);
+
+			m_ProcessListView->ChangeItem((LPTSTR)usageStr.c_str(), i, COLUMN_CPU_INDEX);
+
+			m_ProcessUsedCPU[i] = newTime;
+			
+		}
+	}
 }
 
 void MainWindow::InitProcessList() {
@@ -104,12 +123,16 @@ void MainWindow::InitProcessList() {
 	m_ProcessIDs = ProcessEnumerator::GetProcessIDs();
 
 	for (int i = 0; i < m_ProcessIDs.size(); i++) {
-		wstring pidStr = to_wstring(m_ProcessIDs[i]);
+		DWORD pid = m_ProcessIDs[i];
+
+		wstring pidStr = to_wstring(pid);
 		m_ProcessListView->CreateItem((LPTSTR)pidStr.c_str());
 
 		wstring pName = ProcessEnumerator::GetProcessName(m_ProcessIDs[i]);
-
 		m_ProcessListView->ChangeItem((LPTSTR)pName.c_str(), i, COLUMN_NAME_INDEX);
+
+		m_ProcessListView->ChangeItem((LPTSTR)TEXT("0"), i, COLUMN_CPU_INDEX);
+		m_ProcessUsedCPU.push_back(ProcessEnumerator::GetUsedCPUTime(pid));
 	}
 }
 

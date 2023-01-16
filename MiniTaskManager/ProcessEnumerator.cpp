@@ -51,12 +51,22 @@ wstring ProcessEnumerator::GetProcessName(DWORD pid) {
 			wstring nameStr = wstring(processName, nameLen);
 			int slashPos = nameStr.find_last_of(TEXT("\\"));
 			return wstring(nameStr.substr(slashPos + 1));
-		} else {
-			Sleep(1);
 		}
-	} else {
-		Sleep(1);
 	}
 
 	return wstring();
+}
+
+ULONG64 ProcessEnumerator::GetUsedCPUTime(DWORD pid) {
+	HANDLE pHandle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+	if (pHandle != NULL) {
+		FILETIME creationTime, exitTime, kernelTime, userTime;
+		GetProcessTimes(pHandle, &creationTime, &exitTime, &kernelTime, &userTime);
+
+		ULONG64 result = (userTime.dwHighDateTime << 16) + userTime.dwLowDateTime;
+		result += (kernelTime.dwHighDateTime << 16) + kernelTime.dwLowDateTime;
+		return result;
+	}
+
+	return 0;
 }

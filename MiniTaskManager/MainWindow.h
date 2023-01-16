@@ -14,9 +14,11 @@ using namespace std;
 
 #define MAIN_WINDOW_CLASS_NAME TEXT("MiniTaskMgrClass")
 #define TIMER_ID1 1
+#define TIMER_INTERVAL_MS 1000
 
 #define COLUMN_PID_INDEX 0
 #define COLUMN_NAME_INDEX 1
+#define COLUMN_CPU_INDEX 2
 
 class MainWindow : Window {
 public:
@@ -33,4 +35,5 @@ private:
 
 	ListView *m_ProcessListView;
 	vector<DWORD> m_ProcessIDs;
+	vector<ULONG64> m_ProcessUsedCPU;
 };
